@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PC Builder Pro - Ultimate Campaign</title>
+    <style>
+        :root {
+            --bg-dark: #070d11;
+            --panel-bg: #0e1922;
+            --panel-border: #1e3a4c;
+            --accent-teal: #00e5ff;
+            --accent-dim: #005f73;
+            --text-main: #e0f2fe;
+            --text-muted: #7dd3fc;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --warning: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', Courier, monospace, system-ui, -apple-system;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            padding: 10px;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 520px;
+            background: var(--panel-bg);
+            border: 2px solid var(--panel-border);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 229, 255, 0.1);
+            overflow: hidden;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: rgba(0,0,0,0.3);
+            border-bottom: 1px solid var(--panel-border);
+            font-size: 14px;
+        }
+
+        .round-indicator {
+            color: var(--text-muted);
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .score-display {
+            color: var(--accent-teal);
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .dashboard {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 16px;
+            background: #04080a;
+            border-bottom: 1px solid var(--panel-border);
+            font-size: 12px;
+        }
+
+        .heat-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-grow: 1;
+            margin-right: 15px;
+        }
+
+        .heat-label {
+            color: var(--warning);
+            font-weight: bold;
+        }
+
+        .heat-bar-bg {
+            flex-grow: 1;
+            height: 10px;
+            background: #1e293b;
+            border: 1px solid var(--panel-border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .heat-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--accent-teal);
+            transition: width 0.3s ease, background 0.3s ease;
+        }
+
+        .controls-right {
+            display: flex;
+            gap: 6px;
+        }
+
+        .icon-btn {
+            background: var(--panel-border);
+            border: none;
+            color: var(--text-main);
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .icon-btn:hover {
+            background: var(--accent-dim);
+        }
+
+        .play-area {
+            display: grid;
+            grid-template-columns: 130px 1fr;
+            min-height: 400px;
+            position: relative;
+        }
+
+        .sidebar {
+            background: rgba(0,0,0,0.2);
+            border-right: 1px solid var(--panel-border);
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .sidebar-title {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+
+        .part-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 6px;
+            padding: 6px;
+            text-align: center;
+            cursor: grab;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .part-card:hover {
+            border-color: var(--accent-teal);
+            background: rgba(0, 229, 255, 0.05);
+        }
+
+        .part-card.selected-tap {
+            border-color: var(--accent-teal);
+            background: rgba(0, 229, 255, 0.15);
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
+        }
+
+        .part-icon {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .part-name {
+            font-size: 9px;
+            color: var(--text-main);
+            font-weight: bold;
+        }
+
+        .workspace {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            position: relative;
+            background: radial-gradient(circle at center, #0f2230 0%, #070d11 100%);
+        }
+
+        .motherboard {
+            width: 100%;
+            height: 100%;
+            background: #0a1722;
+            border: 2px dashed var(--panel-border);
+            border-radius: 6px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(auto-fill, minmax(55px, 1fr));
+            gap: 8px;
+            padding: 10px;
+            position: relative;
+            overflow-y: auto;
+            max-height: 380px;
+        }
+
+        .board-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(255, 255, 255, 0.04);
+            font-size: 28px;
+            font-weight: bold;
+            letter-spacing: 4px;
+            pointer-events: none;
+        }
+
+        .socket {
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px dashed var(--panel-border);
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 6px;
+            transition: all 0.2s;
+            position: relative;
+            min-height: 55px;
+        }
+
+        .socket.highlight {
+            border-color: var(--accent-teal);
+            background: rgba(0, 229, 255, 0.08);
+        }
+
+        .socket.filled {
+            border-style: solid;
+            border-color: var(--success);
+            background: rgba(34, 197, 94, 0.1);
+        }
+
+        .socket-title {
+            font-size: 9px;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+
+        .socket-content {
+            font-size: 10px;
+            font-weight: bold;
+            color: var(--success);
+            text-align: center;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(7, 13, 17, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            text-align: center;
+            z-index: 20;
+            display: none;
+        }
+
+        .overlay.active {
+            display: flex;
+        }
+
+        .overlay h2 {
+            font-size: 22px;
+            margin-bottom: 12px;
+            color: var(--accent-teal);
+        }
+
+        .overlay.overheat h2 {
+            color: var(--danger);
+            font-size: 26px;
+            letter-spacing: 2px;
+        }
+
+        .overlay p {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            max-width: 240px;
+        }
+
+        .btn {
+            background: var(--accent-teal);
+            color: var(--bg-dark);
+            border: none;
+            padding: 10px 24px;
+            font-weight: bold;
+            font-size: 13px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            width: 100%;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--accent-teal);
+            border: 1px solid var(--accent-teal);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0, 229, 255, 0.1);
+        }
+
+        .quiz-choices {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+            max-width: 340px;
+            margin-bottom: 16px;
+        }
+
+        .quiz-btn {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            color: var(--text-main);
+            padding: 10px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            text-align: left;
+            transition: all 0.2s;
+        }
+
+        .quiz-btn:hover {
+            border-color: var(--accent-teal);
+            background: rgba(0, 229, 255, 0.1);
+        }
+
+        .guide-modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-dark);
+            z-index: 30;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            display: none;
+        }
+
+        .guide-modal.active {
+            display: flex;
+        }
+
+        .guide-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 8px;
+        }
+
+        .guide-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-right: 4px;
+        }
+
+        .guide-item {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 6px;
+            padding: 8px;
+        }
+
+        .guide-item h4 {
+            color: var(--accent-teal);
+            font-size: 12px;
+            margin-bottom: 2px;
+        }
+
+        .guide-item p {
+            color: var(--text-muted);
+            font-size: 10px;
+            line-height: 1.3;
+        }
+
+        .footer-brand {
+            padding: 6px;
+            text-align: center;
+            font-size: 10px;
+            color: var(--panel-border);
+            background: #04080a;
+            border-top: 1px solid rgba(255,255,255,0.03);
+        }
+
+        svg.icon-svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--accent-teal);
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <div class="top-bar">
+            <span class="round-indicator" id="roundLabel">ROUND 1</span>
+            <span class="score-display"><span id="scoreVal">0</span> PTS</span>
+        </div>
+
+        <div class="dashboard">
+            <div class="heat-container">
+                <span class="heat-label">HEAT</span>
+                <div class="heat-bar-bg">
+                    <div class="heat-bar-fill" id="heatFill"></div>
+                </div>
+            </div>
+            <div class="controls-right">
+                <button class="icon-btn" id="bgmToggleBtn" title="Toggle Arcade Music">🎵</button>
+                <button class="icon-btn" id="soundToggleBtn" title="Toggle Sound Effects">🔊</button>
+                <button class="icon-btn" id="guideBtn" title="Part Guide">❓</button>
+                <button class="icon-btn" id="pauseBtn" title="Pause Game">⏸</button>
+            </div>
+        </div>
+
+        <div class="play-area">
+            <div class="sidebar" id="sidebar">
+                <div class="sidebar-title">Parts Tray</div>
+            </div>
+
+            <div class="workspace">
+                <div class="motherboard" id="motherboard">
+                    <div class="board-label">BOARD</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Intro / State Overlay -->
+        <div class="overlay active" id="mainOverlay">
+            <h2 id="overlayTitle">PC BUILDER TRAINING</h2>
+            <p id="overlayDesc">Install all 13 components across 3 progressive rounds, pass mini-quizzes, and conquer the final Master Quiz!</p>
+            <div class="btn-group">
+                <button class="btn" id="overlayBtn">PLAY NOW</button>
+                <button class="btn btn-secondary" id="introGuideBtn">PARTS GUIDE</button>
+            </div>
+        </div>
+
+        <!-- Mini / Final Quiz Overlay -->
+        <div class="overlay" id="quizOverlay">
+            <h2 id="quizTitle">QUICK MINI-QUIZ (1.5x PTS)</h2>
+            <p id="quizQuestion">Loading question...</p>
+            <div class="quiz-choices" id="quizChoices"></div>
+        </div>
+
+        <!-- Part Guide Modal -->
+        <div class="guide-modal" id="guideModal">
+            <div class="guide-header">
+                <h3>PART GUIDE (13 PARTS)</h3>
+                <button class="icon-btn" id="closeGuideBtn">✕</button>
+            </div>
+            <div class="guide-content" id="guideContentList"></div>
+        </div>
+
+        <div class="footer-brand">PC Builder Basics • 13-Part Campaign Edition</div>
+    </div>
+
+    <script>
+        const HARDWARE_DB = [
+            { id: 'board', name: 'Motherboard', category: 'board', desc: 'The manager: connects every part, holds the BIOS, and has Wi-Fi built in.' },
+            { id: 'cpu', name: 'CPU', category: 'cpu', desc: 'The brain. It runs every instruction the computer carries out.' },
+            { id: 'paste', name: 'Thermal Paste', category: 'paste', desc: 'Fills the tiny gaps between the CPU and cooler so heat can leave.' },
+            { id: 'cooler', name: 'CPU Cooler', category: 'cooler', desc: 'Keeps the brain from overheating — fan cooled, or a radiator for liquid loops.' },
+            { id: 'ram', name: 'RAM', category: 'ram', desc: 'How much the computer can hold in mind at once — like brain cells.' },
+            { id: 'gpu', name: 'GPU', category: 'gpu', desc: 'Makes the pictures: the GUI you see after logging in, and every game frame.' },
+            { id: 'ssd', name: 'SSD', category: 'storage', desc: 'Where everything is stored — pictures, games, applications.' },
+            { id: 'hdd', name: 'Hard Drive', category: 'hdd', desc: 'An older spinning drive — slower than SSD, but cheap for bulk storage.' },
+            { id: 'psu', name: 'PSU', category: 'psu', desc: 'The powerhouse — the mitochondria of the PC. It feeds energy to everything.' },
+            { id: 'fan', name: 'Case Fan', category: 'fan', desc: 'Pushes the heat out of the chassis.' },
+            { id: 'accessories', name: 'Accessories', category: 'accessories', desc: 'Monitor, keyboard, mouse, speakers — everything you plug in.' },
+            { id: 'bios', name: 'BIOS', category: 'bios', desc: 'The setup menu stored on the motherboard before OS installation.' },
+            { id: 'wifi', name: 'Wifi Chip', category: 'wifi', desc: 'Wireless network connectivity chip.' }
+        ];
+
+        // Mini quizzes between rounds
+        const MINI_QUIZZES = [
+            // Round 1 Mini-Quiz
+            [
+                { q: "Which component is the brain that runs every instruction the computer carries out?", choices: ["CPU", "PSU", "RAM", "BIOS"], correct: 0 },
+                { q: "What fills the tiny gaps between the CPU and its cooler so heat can leave?", choices: ["Thermal Paste", "Liquid Coolant", "Silicon Oil", "Thermal Tape"], correct: 0 }
+            ],
+            // Round 2 Mini-Quiz
+            [
+                { q: "Which part is the powerhouse (mitochondria) of the PC that feeds energy to everything?", choices: ["PSU", "Motherboard", "Case Fan", "Hard Drive"], correct: 0 },
+                { q: "Which drive is an older spinning drive — slower than an SSD, but cheap for bulk storage?", choices: ["Hard Drive", "NVMe SSD", "RAM", "GPU"], correct: 0 }
+            ]
+        ];
+
+        // Final Boss Master Quiz (Round 3 Complete)
+        const MASTER_QUIZ = {
+            q: "FINAL BOSS TEST: What is the setup menu stored on the motherboard that you meet before an OS is installed?",
+            choices: ["BIOS", "GPU", "SSD", "Accessories"],
+            correct: 0
+        };
+
+        const SVG_ICONS = {
+            cpu: '<svg class="icon-svg" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/></svg>',
+            cooler: '<svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4v4M12 16v4"/></svg>',
+            gpu: '<svg class="icon-svg" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="8" cy="12" r="3"/></svg>',
+            ram: '<svg class="icon-svg" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="10" rx="1"/><path d="M6 7v10M10 7v10"/></svg>',
+            psu: '<svg class="icon-svg" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 12h12"/></svg>',
+            fan: '<svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v9"/></svg>',
+            storage: '<svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h10"/></svg>',
+            board: '<svg class="icon-svg" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="M6 6h2v2H6zM14 6h4v4h-4z"/></svg>',
+            accessories: '<svg class="icon-svg" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
+            paste: '<svg class="icon-svg" viewBox="0 0 24 24"><path d="M18 2l4 4M7.5 20.5 19 9l-4-4L3.5 16.5 2 22z"/></svg>',
+            bios: '<svg class="icon-svg" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>',
+            wifi: '<svg class="icon-svg" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>',
+            hdd: '<svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="12" cy="11" r="4"/><circle cx="12" cy="11" r="1"/></svg>'
+        };
+
+        let gameState = {
+            round: 1,
+            score: 0,
+            heat: 0,
+            maxHeat: 100,
+            heatRate: 0.35,
+            isPlaying: false,
+            isPaused: false,
+            soundEnabled: true,
+            bgmEnabled: false,
+            requiredParts: [],
+            placedParts: new Set(),
+            selectedPartId: null,
+            timerInterval: null,
+            bgmInterval: null,
+            miniQuizIndex: 0
+        };
+
+        let audioCtx = null;
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function playSound(type) {
+            if (!gameState.soundEnabled) return;
+            initAudio();
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'snap') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now); osc.stop(now + 0.1);
+            } else if (type === 'click') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, now);
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now); osc.stop(now + 0.05);
+            } else if (type === 'success') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.setValueAtTime(659.25, now + 0.1);
+                osc.frequency.setValueAtTime(783.99, now + 0.2);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
+                osc.start(now); osc.stop(now + 0.35);
+            } else if (type === 'overheat') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.linearRampToValueAtTime(80, now + 0.4);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now); osc.stop(now + 0.4);
+            }
+        }
+
+        const arcadeNotes = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63, 440.00, 493.88];
+        let noteIndex = 0;
+        function playArcadeNote() {
+            if (!gameState.bgmEnabled || !gameState.isPlaying || gameState.isPaused) return;
+            initAudio();
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(arcadeNotes[noteIndex], now);
+            gain.gain.setValueAtTime(0.03, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(now); osc.stop(now + 0.2);
+            noteIndex = (noteIndex + 1) % arcadeNotes.length;
+        }
+
+        function toggleBGM() {
+            gameState.bgmEnabled = !gameState.bgmEnabled;
+            const btn = document.getElementById('bgmToggleBtn');
+            btn.style.color = gameState.bgmEnabled ? 'var(--accent-teal)' : 'var(--text-main)';
+            if (gameState.bgmEnabled && gameState.isPlaying && !gameState.bgmInterval) {
+                gameState.bgmInterval = setInterval(playArcadeNote, 220);
+            } else if (!gameState.bgmEnabled && gameState.bgmInterval) {
+                clearInterval(gameState.bgmInterval); gameState.bgmInterval = null;
+            }
+            playSound('click');
+        }
+
+        const roundLabel = document.getElementById('roundLabel');
+        const scoreVal = document.getElementById('scoreVal');
+        const heatFill = document.getElementById('heatFill');
+        const sidebar = document.getElementById('sidebar');
+        const motherboard = document.getElementById('motherboard');
+        const mainOverlay = document.getElementById('mainOverlay');
+        const overlayTitle = document.getElementById('overlayTitle');
+        const overlayDesc = document.getElementById('overlayDesc');
+        const overlayBtn = document.getElementById('overlayBtn');
+        const introGuideBtn = document.getElementById('introGuideBtn');
+        const quizOverlay = document.getElementById('quizOverlay');
+        const quizTitle = document.getElementById('quizTitle');
+        const quizQuestion = document.getElementById('quizQuestion');
+        const quizChoices = document.getElementById('quizChoices');
+        const guideModal = document.getElementById('guideModal');
+
+        function startRound() {
+            initAudio();
+            mainOverlay.classList.remove('active', 'overheat');
+            guideModal.classList.remove('active');
+            quizOverlay.classList.remove('active');
+
+            gameState.heat = 0;
+            gameState.placedParts.clear();
+            gameState.selectedPartId = null;
+            gameState.isPlaying = true;
+            gameState.isPaused = false;
+
+            // Distribute all 13 parts across 3 rounds
+            if (gameState.round === 1) {
+                gameState.requiredParts = ['board', 'cpu', 'paste', 'cooler', 'ram'];
+                gameState.heatRate = 0.35;
+            } else if (gameState.round === 2) {
+                gameState.requiredParts = ['gpu', 'ssd', 'hdd', 'psu', 'fan'];
+                gameState.heatRate = 0.5;
+            } else {
+                gameState.requiredParts = ['accessories', 'bios', 'wifi'];
+                gameState.heatRate = 0.65;
+            }
+
+            roundLabel.textContent = `ROUND ${gameState.round} / 3`;
+            renderSidebar();
+            renderMotherboard();
+
+            if (gameState.bgmEnabled && !gameState.bgmInterval) {
+                gameState.bgmInterval = setInterval(playArcadeNote, 220);
+            }
+
+            if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+            gameState.timerInterval = setInterval(updateGameLoop, 100);
+        }
+
+        function updateGameLoop() {
+            if (!gameState.isPlaying || gameState.isPaused) return;
+            gameState.heat += gameState.heatRate;
+            let heatPct = (gameState.heat / gameState.maxHeat) * 100;
+            heatFill.style.width = heatPct + '%';
+            heatFill.style.background = heatPct < 50 ? 'var(--accent-teal)' : heatPct < 85 ? 'var(--warning)' : 'var(--danger)';
+
+            if (gameState.heat >= gameState.maxHeat) triggerOverheat();
+        }
+
+        function triggerOverheat() {
+            gameState.isPlaying = false;
+            clearInterval(gameState.timerInterval);
+            if (gameState.bgmInterval) { clearInterval(gameState.bgmInterval); gameState.bgmInterval = null; }
+            playSound('overheat');
+            mainOverlay.classList.add('active', 'overheat');
+            overlayTitle.textContent = "OVERHEATED";
+            overlayDesc.textContent = "Thermal threshold exceeded! The rig shut down.";
+            overlayBtn.textContent = "TRY ROUND AGAIN";
+            introGuideBtn.style.display = "none";
+        }
+
+        function renderSidebar() {
+            const trayLabel = sidebar.querySelector('.sidebar-title');
+            sidebar.innerHTML = ''; sidebar.appendChild(trayLabel);
+
+            gameState.requiredParts.forEach(partId => {
+                if (!gameState.placedParts.has(partId)) {
+                    const partData = HARDWARE_DB.find(p => p.id === partId);
+                    const card = document.createElement('div');
+                    card.className = `part-card ${gameState.selectedPartId === partId ? 'selected-tap' : ''}`;
+                    card.draggable = true;
+                    card.innerHTML = `
+                        <div class="part-icon">${SVG_ICONS[partData.category] || SVG_ICONS.board}</div>
+                        <div class="part-name">${partData.name}</div>
+                    `;
+                    card.addEventListener('dragstart', (e) => e.dataTransfer.setData('text/plain', partId));
+                    card.addEventListener('click', () => {
+                        playSound('click');
+                        document.querySelectorAll('.part-card').forEach(c => c.classList.remove('selected-tap'));
+                        gameState.selectedPartId = gameState.selectedPartId === partId ? null : partId;
+                        if (gameState.selectedPartId) card.classList.add('selected-tap');
+                    });
+                    sidebar.appendChild(card);
+                }
+            });
+        }
+
+        function renderMotherboard() {
+            const boardLabel = motherboard.querySelector('.board-label');
+            motherboard.innerHTML = ''; motherboard.appendChild(boardLabel);
+
+            gameState.requiredParts.forEach(partId => {
+                const partData = HARDWARE_DB.find(p => p.id === partId);
+                const isFilled = gameState.placedParts.has(partId);
+                const socket = document.createElement('div');
+                socket.className = `socket ${isFilled ? 'filled' : ''}`;
+                socket.innerHTML = `
+                    <div class="socket-title">${partData.name}</div>
+                    <div class="socket-content">${isFilled ? 'INSTALLED ✓' : 'EMPTY'}</div>
+                `;
+                socket.addEventListener('dragover', (e) => { e.preventDefault(); socket.classList.add('highlight'); });
+                socket.addEventListener('dragleave', () => socket.classList.remove('highlight'));
+                socket.addEventListener('drop', (e) => {
+                    e.preventDefault(); socket.classList.remove('highlight');
+                    handlePartPlacement(e.dataTransfer.getData('text/plain'), partId);
+                });
+                socket.addEventListener('click', () => {
+                    if (gameState.selectedPartId) {
+                        handlePartPlacement(gameState.selectedPartId, partId);
+                        gameState.selectedPartId = null;
+                    }
+                });
+                motherboard.appendChild(socket);
+            });
+        }
+
+        function handlePartPlacement(draggedId, targetSocketId) {
+            if (!gameState.isPlaying || gameState.isPaused) return;
+            if (draggedId === targetSocketId && !gameState.placedParts.has(draggedId)) {
+                gameState.placedParts.add(draggedId);
+                playSound('snap');
+                gameState.score += 100;
+                scoreVal.textContent = gameState.score;
+                gameState.heat = Math.max(0, gameState.heat - 14);
+                renderSidebar(); renderMotherboard();
+                if (gameState.placedParts.size === gameState.requiredParts.length) completeRound();
+            } else {
+                playSound('click');
+            }
+        }
+
+        function completeRound() {
+            gameState.isPlaying = false;
+            clearInterval(gameState.timerInterval);
+            if (gameState.bgmInterval) { clearInterval(gameState.bgmInterval); gameState.bgmInterval = null; }
+            playSound('success');
+
+            if (gameState.round === 1 || gameState.round === 2) {
+                triggerMiniQuiz();
+            } else {
+                triggerMasterQuiz();
+            }
+        }
+
+        function triggerMiniQuiz() {
+            quizOverlay.classList.add('active');
+            quizTitle.textContent = `ROUND ${gameState.round} MINI-QUIZ (1.5x PTS)`;
+            const quizSet = MINI_QUIZZES[gameState.round - 1];
+            const quiz = quizSet[Math.floor(Math.random() * quizSet.length)];
+            quizQuestion.textContent = quiz.q;
+            quizChoices.innerHTML = '';
+            quiz.choices.forEach((choice, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-btn'; btn.textContent = choice;
+                btn.addEventListener('click', () => {
+                    if (index === quiz.correct) { playSound('success'); gameState.score += 200; }
+                    else { playSound('click'); }
+                    scoreVal.textContent = gameState.score;
+                    quizOverlay.classList.remove('active');
+                    showRoundCompleteModal();
+                });
+                quizChoices.appendChild(btn);
+            });
+        }
+
+        function triggerMasterQuiz() {
+            quizOverlay.classList.add('active');
+            quizTitle.textContent = "FINAL BOSS MASTER QUIZ";
+            quizQuestion.textContent = MASTER_QUIZ.q;
+            quizChoices.innerHTML = '';
+            MASTER_QUIZ.choices.forEach((choice, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-btn'; btn.textContent = choice;
+                btn.addEventListener('click', () => {
+                    if (index === MASTER_QUIZ.correct) { playSound('success'); gameState.score += 500; }
+                    else { playSound('click'); }
+                    scoreVal.textContent = gameState.score;
+                    quizOverlay.classList.remove('active');
+                    showVictoryModal();
+                });
+                quizChoices.appendChild(btn);
+            });
+        }
+
+        function showRoundCompleteModal() {
+            mainOverlay.classList.add('active');
+            overlayTitle.textContent = `ROUND ${gameState.round} COMPLETED!`;
+            overlayDesc.textContent = `All parts installed successfully! Score: ${gameState.score} PTS.`;
+            overlayBtn.textContent = "START ROUND " + (gameState.round + 1);
+            introGuideBtn.style.display = "none";
+            gameState.round++;
+        }
+
+        function showVictoryModal() {
+            mainOverlay.classList.add('active');
+            overlayTitle.textContent = "CAMPAIGN VICTORY!";
+            overlayDesc.textContent = `Legendary Build Complete! You mastered all 13 parts and quizzes. Final Score: ${gameState.score} PTS.`;
+            overlayBtn.textContent = "PLAY AGAIN";
+            introGuideBtn.style.display = "block";
+            gameState.round = 1;
+            gameState.score = 0;
+        }
+
+        function populateGuide() {
+            const list = document.getElementById('guideContentList');
+            list.innerHTML = '';
+            HARDWARE_DB.forEach(part => {
+                const item = document.createElement('div');
+                item.className = 'guide-item';
+                item.innerHTML = `<h4>${part.name}</h4><p>${part.desc}</p>`;
+                list.appendChild(item);
+            });
+        }
+
+        overlayBtn.addEventListener('click', startRound);
+        introGuideBtn.addEventListener('click', () => { playSound('click'); populateGuide(); guideModal.classList.add('active'); });
+        
+        document.getElementById('soundToggleBtn').addEventListener('click', () => {
+            gameState.soundEnabled = !gameState.soundEnabled;
+            document.getElementById('soundToggleBtn').textContent = gameState.soundEnabled ? '🔊' : '🔇';
+            playSound('click');
+        });
+        document.getElementById('bgmToggleBtn').addEventListener('click', toggleBGM);
+        document.getElementById('guideBtn').addEventListener('click', () => { playSound('click'); populateGuide(); guideModal.classList.add('active'); });
+        document.getElementById('closeGuideBtn').addEventListener('click', () => { playSound('click'); guideModal.classList.remove('active'); });
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            if (!gameState.isPlaying) return;
+            gameState.isPaused = !gameState.isPaused;
+            document.getElementById('pauseBtn').textContent = gameState.isPaused ? '▶' : '⏸';
+            if (gameState.isPaused) {
+                mainOverlay.classList.add('active');
+                overlayTitle.textContent = "GAME PAUSED"; overlayDesc.textContent = "Take a break."; overlayBtn.textContent = "RESUME";
+                introGuideBtn.style.display = "none";
+            } else { mainOverlay.classList.remove('active'); }
+            playSound('click');
+        });
+    </script>
+</body>
+</html>
