@@ -867,21 +867,12 @@ card.addEventListener('click', () => {
         // Firmware verification is a setup activity, not a physical installation.
         // Mark it complete only once, so the score cannot be collected repeatedly.
         if (!gameState.placedParts.has('bios') && gameState.isPlaying) {
-            alert(
-                "BIOS / UEFI FIRMWARE VERIFICATION\n\n" +
-                "BIOS/UEFI is firmware stored in nonvolatile memory on the motherboard.\n\n" +
-                "It initializes hardware and provides system configuration tools.\n\n" +
-                "SIMULATED CHECK: CPU, memory, and storage detected.\n" +
-                "Firmware verification complete."
-            );
-            gameState.placedParts.add('bios');
-            gameState.score += 100;
-            scoreVal.textContent = gameState.score;
-            renderSidebar();
-            renderMotherboard();
-            if (gameState.placedParts.size === gameState.requiredParts.length) {
-                completeRound();
-            }
+		
+    // ROUND 3: OPEN THE SIMULATED UEFI SCREEN
+    // Call the function we created at the bottom of the file.
+    // This displays the CPU, RAM, and storage information.
+    openUEFI();
+
         }
 
         // Stop here so BIOS cannot be selected for installation.
@@ -1480,6 +1471,119 @@ nextBtn.addEventListener('click', () => {
             } else { mainOverlay.classList.remove('active'); }
             playSound('click');
         });
+		
+    // ROUND 3: SIMULATED UEFI FIRMWARE INTERFACE
+    // This function opens a simulated firmware setup screen.
+    // It does not access or modify the player's real BIOS/UEFI.
+    function openUEFI() {
+
+        // Hide the regular game screen behind the quiz overlay.
+        quizOverlay.classList.add('active');
+
+        // Give the simulated firmware screen its own heading.
+        quizTitle.textContent = "UEFI FIRMWARE SETUP";
+
+        // Explain what the player needs to verify.
+        quizQuestion.textContent =
+            "Inspect the system information and verify that " +
+            "the CPU, memory, and storage devices are detected.";
+
+        // Clear any buttons left over from previous quizzes.
+        quizChoices.innerHTML = '';
+
+        // Define the simulated hardware information.
+        // These values are fictional training data.
+        const systemInfo = [
+            "CPU: Intel Core i5 (Detected)",
+            "Memory: 16 GB RAM (Detected)",
+            "Storage: 512 GB SSD (Detected)",
+            "Storage: 1 TB HDD (Detected)"
+        ];
+
+        // Create a separate display entry for each device.
+        systemInfo.forEach(info => {
+
+            const entry = document.createElement('div');
+
+            // Use existing styling to match the game.
+            entry.className = 'quiz-btn';
+
+            // Display the simulated hardware information.
+            entry.textContent = info;
+
+            // Add the entry to the UEFI interface.
+            quizChoices.appendChild(entry);
+        });
+		
+    // TRACK THE PLAYER'S VERIFICATION
+    // The player must inspect each hardware category.
+    const verified = new Set();
+
+    // Create a button for each verification task.
+    const checks = [
+        { id: 'cpu', label: 'VERIFY CPU DETECTION' },
+        { id: 'ram', label: 'VERIFY MEMORY DETECTION' },
+        { id: 'storage', label: 'VERIFY STORAGE DETECTION' }
+    ];
+
+    checks.forEach(check => {
+        const button = document.createElement('button');
+        button.className = 'quiz-btn';
+        button.textContent = check.label;
+
+        button.addEventListener('click', () => {
+
+            // Record this verification only once.
+            verified.add(check.id);
+            button.textContent = '✓ ' + check.label;
+            button.disabled = true;
+
+            // Unlock completion after all three checks.
+            if (verified.size === checks.length) {
+                finishButton.disabled = false;
+                finishButton.textContent = 'EXIT UEFI & COMPLETE VERIFICATION';
+            }
+        });
+
+        quizChoices.appendChild(button);
+    });
+
+    // COMPLETION BUTTON
+    // Keep this locked until all checks are verified.
+    const finishButton = document.createElement('button');
+    finishButton.className = 'btn';
+    finishButton.textContent = 'COMPLETE ALL CHECKS FIRST';
+    finishButton.disabled = true;
+
+    finishButton.addEventListener('click', () => {
+
+        // Prevent duplicate scoring.
+        if (gameState.placedParts.has('bios')) return;
+
+        // Mark the firmware activity complete.
+        gameState.placedParts.add('bios');
+
+        // Award the original 100 points.
+        gameState.score += 100;
+        scoreVal.textContent = gameState.score;
+
+        // Close the simulated firmware interface.
+        quizOverlay.classList.remove('active');
+
+        // Refresh the Round 3 display.
+        renderSidebar();
+        renderMotherboard();
+
+        // Preserve the original final-exam progression.
+        if (gameState.placedParts.size === gameState.requiredParts.length) {
+            completeRound();
+        }
+    });
+
+    quizChoices.appendChild(finishButton);
+
+    }
+
     </script>
 </body>
 </html>
