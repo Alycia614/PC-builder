@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PC Builder Pro - Ultimate Campaign & Final Test</title>
+    <title>PC Builder - Master Working Version</title>
     <style>
         :root {
             --bg-dark: #070d11;
@@ -493,14 +493,14 @@
         <!-- Main Intro / State Overlay -->
         <div class="overlay active" id="mainOverlay">
             <h2 id="overlayTitle">PC BUILDER TRAINING</h2>
-            <p id="overlayDesc">Install all 13 components across 3 progressive rounds, pass mini-quizzes, and conquer the Ultimate Final Exam covering all 13 parts!</p>
+            <p id="overlayDesc">Install all 13 components across 3 progressive rounds, pass mini-quizzes, and conquer the final Master Quiz!</p>
             <div class="btn-group">
                 <button class="btn" id="overlayBtn">PLAY NOW</button>
                 <button class="btn btn-secondary" id="introGuideBtn">PARTS GUIDE</button>
             </div>
         </div>
 
-        <!-- Mini / Final Test Quiz Overlay -->
+        <!-- Mini / Final Quiz Overlay -->
         <div class="overlay" id="quizOverlay">
             <h2 id="quizTitle">QUICK MINI-QUIZ (1.5x PTS)</h2>
             <p id="quizQuestion">Loading question...</p>
@@ -536,12 +536,14 @@
             { id: 'wifi', name: 'Wifi Chip', category: 'wifi', desc: 'Wireless network connectivity chip.' }
         ];
 
-        // Mini quizzes between rounds 1 and 2
+        // Mini quizzes between rounds
         const MINI_QUIZZES = [
+            // Round 1 Mini-Quiz
             [
                 { q: "Which component is the brain that runs every instruction the computer carries out?", choices: ["CPU", "PSU", "RAM", "BIOS"], correct: 0 },
                 { q: "What fills the tiny gaps between the CPU and its cooler so heat can leave?", choices: ["Thermal Paste", "Liquid Coolant", "Silicon Oil", "Thermal Tape"], correct: 0 }
             ],
+            // Round 2 Mini-Quiz
             [
                 { q: "Which part is the powerhouse (mitochondria) of the PC that feeds energy to everything?", choices: ["PSU", "Motherboard", "Case Fan", "Hard Drive"], correct: 0 },
                 { q: "Which drive is an older spinning drive — slower than an SSD, but cheap for bulk storage?", choices: ["Hard Drive", "NVMe SSD", "RAM", "GPU"], correct: 0 }
@@ -648,6 +650,7 @@
             selectedPartId: null,
             timerInterval: null,
             bgmInterval: null,
+            miniQuizIndex: 0,
             finalTestIndex: 0
         };
 
@@ -754,20 +757,50 @@
             gameState.isPlaying = true;
             gameState.isPaused = false;
 
+            // Distribute all 13 parts across 3 rounds
             if (gameState.round === 1) {
                 gameState.requiredParts = ['board', 'cpu', 'paste', 'cooler', 'ram'];
                 gameState.heatRate = 0.35;
             } else if (gameState.round === 2) {
                 gameState.requiredParts = ['gpu', 'ssd', 'hdd', 'psu', 'fan'];
                 gameState.heatRate = 0.5;
-            } else {
-                gameState.requiredParts = ['accessories', 'bios', 'wifi'];
-                gameState.heatRate = 0.65;
-            }
+         } else {
 
-            roundLabel.textContent = `ROUND ${gameState.round} / 3`;
-            renderSidebar();
-            renderMotherboard();
+    // ROUND 3: SYSTEM SETUP AND VERIFICATION
+    // Accessories: Connect or inspect external peripherals.
+    // BIOS/UEFI: Verify hardware detection in firmware settings.
+    // WiFi: Identify and configure the system's wireless hardware.
+    //
+    // These are learning activities, not necessarily
+    // physical motherboard installation tasks.
+
+    gameState.requiredParts = ['accessories', 'bios', 'wifi'];
+    // ROUND 3: NO HEAT BUILDUP
+// Allow players time to explore system setup and firmware.
+    gameState.heatRate = 0;
+}
+
+            
+    // ROUND DISPLAY
+    // Show the appropriate heading for the current round.
+
+    if (gameState.round === 3) {
+
+        // Round 3 focuses on setup and verification,
+        // rather than installing additional motherboard parts.
+        roundLabel.textContent = "ROUND 3 / SYSTEM SETUP";
+
+    } else {
+
+        // Rounds 1 and 2 retain their original headings.
+        roundLabel.textContent = `ROUND ${gameState.round} / 3`;
+    }
+
+    // DISPLAY THE GAME INTERFACE
+    // Keep the existing hardware interface working.
+    renderSidebar();
+    renderMotherboard();
+
 
             if (gameState.bgmEnabled && !gameState.bgmInterval) {
                 gameState.bgmInterval = setInterval(playArcadeNote, 220);
@@ -808,18 +841,69 @@
                     const partData = HARDWARE_DB.find(p => p.id === partId);
                     const card = document.createElement('div');
                     card.className = `part-card ${gameState.selectedPartId === partId ? 'selected-tap' : ''}`;
-                    card.draggable = true;
+                    // Firmware is inspected by clicking, never dragged into a socket.
+                    card.draggable = !(gameState.round === 3 && partId === 'bios');
                     card.innerHTML = `
                         <div class="part-icon">${SVG_ICONS[partData.category] || SVG_ICONS.board}</div>
                         <div class="part-name">${partData.name}</div>
                     `;
                     card.addEventListener('dragstart', (e) => e.dataTransfer.setData('text/plain', partId));
-                    card.addEventListener('click', () => {
-                        playSound('click');
-                        document.querySelectorAll('.part-card').forEach(c => c.classList.remove('selected-tap'));
-                        gameState.selectedPartId = gameState.selectedPartId === partId ? null : partId;
-                        if (gameState.selectedPartId) card.classList.add('selected-tap');
-                    });
+                    
+card.addEventListener('click', () => {
+
+    // ROUND 3: BIOS/UEFI FIRMWARE ACTIVITY
+    // BIOS/UEFI is firmware stored on the motherboard.
+    // The player should inspect firmware settings,
+    // not install BIOS as a separate hardware component.
+
+    if (gameState.round === 3 && partId === 'bios') {
+
+        // Clear any previously selected hardware component.
+        gameState.selectedPartId = null;
+
+        // Play the normal button-click sound.
+        playSound('click');
+
+        // Firmware verification is a setup activity, not a physical installation.
+        // Mark it complete only once, so the score cannot be collected repeatedly.
+        if (!gameState.placedParts.has('bios') && gameState.isPlaying) {
+            alert(
+                "BIOS / UEFI FIRMWARE VERIFICATION\n\n" +
+                "BIOS/UEFI is firmware stored in nonvolatile memory on the motherboard.\n\n" +
+                "It initializes hardware and provides system configuration tools.\n\n" +
+                "SIMULATED CHECK: CPU, memory, and storage detected.\n" +
+                "Firmware verification complete."
+            );
+            gameState.placedParts.add('bios');
+            gameState.score += 100;
+            scoreVal.textContent = gameState.score;
+            renderSidebar();
+            renderMotherboard();
+            if (gameState.placedParts.size === gameState.requiredParts.length) {
+                completeRound();
+            }
+        }
+
+        // Stop here so BIOS cannot be selected for installation.
+        return;
+    }
+
+    // LEVEL 1: ORIGINAL COMPONENT SELECTION
+    // Keep the existing behavior for other components.
+    playSound('click');
+
+    document.querySelectorAll('.part-card').forEach(c =>
+        c.classList.remove('selected-tap')
+    );
+
+    gameState.selectedPartId =
+        gameState.selectedPartId === partId ? null : partId;
+
+    if (gameState.selectedPartId) {
+        card.classList.add('selected-tap');
+    }
+});
+
                     sidebar.appendChild(card);
                 }
             });
@@ -829,14 +913,24 @@
             const boardLabel = motherboard.querySelector('.board-label');
             motherboard.innerHTML = ''; motherboard.appendChild(boardLabel);
 
-            gameState.requiredParts.forEach(partId => {
+            // LEVEL 2: DISPLAY ALL HARDWARE COMPONENTS
+// Level 1 shows only the parts required for the current round.
+// Level 2 shows every component so the player can inspect
+// the complete computer.
+
+const partsToDisplay = campaignStage === 'level2Investigating'
+    ? HARDWARE_DB.map(part => part.id)
+    : gameState.requiredParts;
+
+// Create motherboard sockets for the selected components.
+partsToDisplay.forEach(partId => {
                 const partData = HARDWARE_DB.find(p => p.id === partId);
-                const isFilled = gameState.placedParts.has(partId);
+                const isFilled = campaignStage === 'level2Investigating' || gameState.placedParts.has(partId);
                 const socket = document.createElement('div');
                 socket.className = `socket ${isFilled ? 'filled' : ''}`;
                 socket.innerHTML = `
                     <div class="socket-title">${partData.name}</div>
-                    <div class="socket-content">${isFilled ? 'INSTALLED ✓' : 'EMPTY'}</div>
+                    <div class="socket-content">${gameState.round === 3 && partId === 'bios' && campaignStage !== 'level2Investigating' ? (isFilled ? 'VERIFIED ✓' : 'CLICK BIOS IN TRAY') : (isFilled ? 'INSTALLED ✓' : 'EMPTY')}</div>
                 `;
                 socket.addEventListener('dragover', (e) => { e.preventDefault(); socket.classList.add('highlight'); });
                 socket.addEventListener('dragleave', () => socket.classList.remove('highlight'));
@@ -844,18 +938,89 @@
                     e.preventDefault(); socket.classList.remove('highlight');
                     handlePartPlacement(e.dataTransfer.getData('text/plain'), partId);
                 });
-                socket.addEventListener('click', () => {
-                    if (gameState.selectedPartId) {
-                        handlePartPlacement(gameState.selectedPartId, partId);
-                        gameState.selectedPartId = null;
-                    }
-                });
-                motherboard.appendChild(socket);
-            });
-        }
+                
+socket.addEventListener('click', () => {
+
+    // LEVEL 2: HARDWARE INVESTIGATION
+    // If the player is investigating, inspect the clicked
+    // component instead of trying to install hardware.
+
+    if (campaignStage === 'level2Investigating') {
+
+        // Level 2 represents the fully assembled PC from Level 1.
+        inspectComponent(partId);
+
+        // Stop here so Level 1 installation code does not run.
+        return;
+    }
+
+    // LEVEL 1: HARDWARE INSTALLATION
+    // Keep the original installation behavior unchanged.
+    if (gameState.selectedPartId) {
+        handlePartPlacement(gameState.selectedPartId, partId);
+        gameState.selectedPartId = null;
+    }
+
+    }); // End of click listener
+
+	// Add the component to the motherboard
+	// Display the socket immediately when the board is rendered.
+	motherboard.appendChild(socket);
+
+}); // End of required.Parts.forEach loop
+
+} // End of renderMotherboard function
+
+
+ // LEVEL 2: COMPONENT INSPECTION
+ // Identify the hardware component selected by the player.
+
+function inspectComponent(partId) {
+
+    // SEARCH THE HARDWARE DATABASE
+    // Find the component that matches the clicked part ID.
+    const partData = HARDWARE_DB.find(part => part.id === partId);
+
+    // ERROR PREVENTION
+    // Stop if the component cannot be found.
+    if (!partData) {
+        return;
+    }
+
+    // TEMPORARY INSPECTION WINDOW
+    // Show the name of the component the player clicked.
+    // This will later become an in-game diagnostic report.
+    // Diagnostic evidence is specific to the selected component.
+    const findings = {
+        cooler: "The CPU cooler fan is not spinning. Check its power connection after shutting down and unplugging the PC.",
+        paste: "No visible evidence of a thermal-paste problem. A visual check alone cannot confirm paste quality.",
+        fan: "The case fan was observed operating normally before shutdown.",
+        ram: "The memory is detected. This does not explain the stopped CPU cooler fan."
+    };
+    alert(
+        "HARDWARE INSPECTION\n\n" +
+        "Component: " + partData.name + "\n\n" +
+        (findings[partId] || "No evidence linking this component to the overheating incident.")
+    );
+}
+
 
         function handlePartPlacement(draggedId, targetSocketId) {
+    
+// ROUND 3: PREVENT FIRMWARE INSTALLATION
+    // BIOS/UEFI firmware is stored on the motherboard.
+    // It is not installed like RAM or a graphics card.
+    // Players will complete a firmware verification activity instead.
+
+    if (gameState.round === 3 && draggedId === 'bios') {
+        return;
+    }
+
+// Original Hardware Installation
+// Only allow placement while the game is active
             if (!gameState.isPlaying || gameState.isPaused) return;
+
+// Check whether the selected component matches its socket.
             if (draggedId === targetSocketId && !gameState.placedParts.has(draggedId)) {
                 gameState.placedParts.add(draggedId);
                 playSound('snap');
@@ -878,7 +1043,7 @@
             if (gameState.round === 1 || gameState.round === 2) {
                 triggerMiniQuiz();
             } else {
-                // Round 3 complete -> Start Ultimate Final Test covering all 13 parts
+                // ROUND 3: Start the original 13-question final assessment.
                 gameState.finalTestIndex = 0;
                 triggerFinalTestStep();
             }
@@ -905,6 +1070,8 @@
             });
         }
 
+        // LEVEL 1: ORIGINAL 13-QUESTION FINAL EXAM
+        // Correct answers earn 150 points. Level 2 unlocks after all questions.
         function triggerFinalTestStep() {
             quizOverlay.classList.add('active');
             quizTitle.textContent = `ULTIMATE FINAL EXAM (${gameState.finalTestIndex + 1} / ${ULTIMATE_FINAL_TEST.length})`;
@@ -940,16 +1107,323 @@
             gameState.round++;
         }
 
+                let campaignStage = 'level1';
+
         function showVictoryModal() {
+            campaignStage = 'level1Complete';
+            gameState.isPlaying = false;
+            gameState.isPaused = false;
+
+            mainOverlay.classList.remove('overheat');
             mainOverlay.classList.add('active');
-            overlayTitle.textContent = "CAMPAIGN & EXAM VICTORY!";
-            overlayDesc.textContent = `Legendary Build Complete! You mastered all 13 parts and passed the 13-part Final Exam. Final Score: ${gameState.score} PTS.`;
-            overlayBtn.textContent = "PLAY AGAIN";
+            overlayTitle.textContent = "LEVEL 1 COMPLETE!";
+            overlayDesc.textContent =
+                `All 13 hardware and setup activities completed, and the final exam finished! Score: ${gameState.score} PTS. Next assignment: protect the computer you built.`;
+            overlayBtn.textContent = "BEGIN LEVEL 2";
             introGuideBtn.style.display = "block";
-            gameState.round = 1;
-            gameState.score = 0;
         }
 
+        function startLevel2() {
+            campaignStage = 'level2';
+            gameState.isPlaying = false;
+            gameState.isPaused = false;
+
+            // Stop Level 1's heat and music timers.
+            clearInterval(gameState.timerInterval);
+            gameState.timerInterval = null;
+            clearInterval(gameState.bgmInterval);
+            gameState.bgmInterval = null;
+
+            gameState.selectedPartId = null;
+            gameState.heat = 0;
+            heatFill.style.width = '0%';
+
+            roundLabel.textContent = "LEVEL 2";
+            scoreVal.textContent = gameState.score;
+            overlayTitle.textContent = "PROTECT YOUR SYSTEM";
+            overlayDesc.textContent =
+                `Your Level 1 score carries forward: ${gameState.score} PTS. Investigate your assembled computer and respond to a cooling-system failure.`;
+            overlayBtn.textContent = "START MISSION 1";
+            introGuideBtn.style.display = "block";
+            mainOverlay.classList.add('active');
+        }
+
+
+	function startMission1() {
+ 	   campaignStage = 'level2Mission1';
+
+ 	   roundLabel.textContent = "LEVEL 2 / MISSION 1";
+
+ 	   overlayTitle.textContent = "SYSTEM OVERHEATING";
+
+ 	   overlayDesc.innerHTML = `
+    		<span style="color: #ef4444; font-weight: bold;">
+      	  		⚠ CRITICAL SYSTEM WARNING
+    		</span>
+
+    		<span style="display: block; margin-top: 10px;">
+        		Your computer is shutting down unexpectedly.
+    		</span>
+
+    		<span style="display: block; color: #ef4444;
+                 		font-size: 20px; font-weight: bold;
+                 		margin: 12px 0;">
+        		CPU TEMPERATURE: 95°C (203°F)
+    		</span>
+
+    		<span style="display: block; margin-top: 12px;">
+        		<strong style="color: #f59e0b;">
+            			WHAT YOU NEED TO KNOW
+        	</strong>
+        	<span style="display: block; margin-top: 5px;">
+            		CPU temperatures vary depending on the
+            		processor and workload. High temperatures
+            		combined with unexpected shutdowns may
+            		indicate a cooling problem.
+        	</span>
+    	</span>
+
+    <span style="display: block; margin-top: 12px;">
+        <strong style="color: #00e5ff;">
+            YOUR MISSION
+        </strong>
+        <span style="display: block; margin-top: 5px;">
+            Investigate the system, identify the cause,
+            and restore normal operation.
+        </span>
+    </span>
+`;
+
+ 	   overlayBtn.textContent = "BEGIN INVESTIGATION";
+
+	   mainOverlay.classList.add('overheat');
+	   mainOverlay.classList.add('active');
+ 	   
+}
+
+
+function beginInvestigation() {
+    campaignStage = 'level2Investigating';
+
+    // Hide the introduction screen.
+    mainOverlay.classList.remove('active', 'overheat');
+
+// LEVEL 2: INTERACTIVE HARDWARE INVESTIGATION
+// Keep the quiz overlay hidden so the player can
+// interact with the existing hardware interface.
+quizOverlay.classList.remove('active');
+
+// LEVEL 2: REFRESH THE MOTHERBOARD
+// Display all 13 hardware components for inspection.
+// This runs after the game enters Level 2 investigation mode.
+renderMotherboard();
+
+    quizTitle.textContent = "HARDWARE INVESTIGATION";
+    quizQuestion.textContent =
+        "CPU temperature: 95°C. Inspect the components to gather evidence.";
+
+    quizChoices.innerHTML = '';
+
+    const components = [
+        {
+            name: "CPU Cooler",
+            clue: "The CPU cooler fan is not spinning. This may explain why heat is building up."
+        },
+        {
+            name: "Thermal Paste",
+            clue: "The thermal paste appears properly applied. No obvious problem found."
+        },
+        {
+            name: "Case Fan",
+            clue: "The case fan is operating normally. Airflow through the case appears unobstructed."
+        },
+        {
+            name: "RAM",
+            clue: "The RAM is installed correctly. It does not explain the cooling problem."
+        }
+    ];
+
+    const inspected = new Set();
+
+// Shuffle the components into a random order.
+// This prevents the players from memorizing where 
+// the correct component appears on screen.
+
+// Start at the last component and work backward.
+for (let i = components.length - 1; i > 0; i--) {
+
+// Choose a random position from 0 through i.
+    const j = Math.floor(Math.random() * (i + 1));
+
+// Swap the two components.
+    [components[i], components[j]] =
+        [components[j], components[i]];
+}
+    // Create the diagnostic log.
+    const log = document.createElement('div');
+    log.style.cssText =
+        "color:#f59e0b; font-size:11px; text-align:left;" +
+        "margin-top:10px; max-height:110px; overflow-y:auto;";
+
+    log.textContent = "DIAGNOSTIC LOG: No components inspected.";
+
+    // Create a button for each component.
+    components.forEach(component => {
+        const btn = document.createElement('button');
+
+        btn.className = 'quiz-btn';
+        btn.textContent = "INSPECT: " + component.name;
+
+        btn.addEventListener('click', () => {
+            playSound('click');
+
+            inspected.add(component.name);
+
+            log.textContent =
+                "DIAGNOSTIC LOG:\n" + component.clue;
+
+            log.style.whiteSpace = 'pre-line';
+
+            btn.style.borderColor = '#22c55e';
+            btn.textContent = "✓ INSPECTED: " + component.name;
+
+            // Unlock diagnosis after all components are inspected.
+            if (inspected.size === components.length) {
+                diagnoseBtn.style.display = 'block';
+            }
+        });
+
+        quizChoices.appendChild(btn);
+    });
+
+    quizChoices.appendChild(log);
+
+    // Diagnosis button remains hidden until investigation is complete.
+    const diagnoseBtn = document.createElement('button');
+
+    diagnoseBtn.className = 'btn';
+    diagnoseBtn.textContent = "SUBMIT DIAGNOSIS";
+    diagnoseBtn.style.display = 'none';
+
+    diagnoseBtn.addEventListener('click', () => {
+        quizTitle.textContent = "INVESTIGATION COMPLETE";
+        quizQuestion.textContent =
+            "The CPU cooler fan is not spinning. " +
+            "The other inspected components show no obvious problems.";
+
+        quizChoices.innerHTML = '';
+
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'btn';
+        nextBtn.textContent = "CONTINUE TO REPAIR";
+
+       
+nextBtn.addEventListener('click', () => {
+
+    // REPAIR PHASE: DISPLAY THE PROBLEM
+    // Explain the evidence the player collected.
+    quizTitle.textContent = "REPAIR PHASE";
+
+    quizQuestion.textContent =
+        "The CPU cooler fan is not spinning. " +
+        "What is the safest first step to investigate the problem?";
+
+    // Clear the previous investigation buttons.
+    quizChoices.innerHTML = '';
+
+    // REPAIR OPTIONS
+    // Each option has an explanation for the player.
+    const repairOptions = [
+        {
+            text: "Increase the CPU processing speed.",
+            correct: false,
+            feedback: "Increasing CPU speed may generate more heat."
+        },
+        {
+            text: "Shut down the computer and inspect the cooler's power connection.",
+            correct: true,
+            feedback: "Correct! Powering down the computer before inspecting the fan connection is a safer first step."
+        },
+        {
+            text: "Replace the RAM.",
+            correct: false,
+            feedback: "The RAM does not explain why the CPU cooler fan has stopped spinning."
+        },
+        {
+            text: "Ignore the warning and continue using the computer.",
+            correct: false,
+            feedback: "Ignoring the warning could lead to further shutdowns or hardware damage."
+        }
+    ];
+
+    // RANDOMIZE THE ANSWER ORDER
+    // Prevent players from memorizing button positions.
+    for (let i = repairOptions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+
+        [repairOptions[i], repairOptions[j]] =
+            [repairOptions[j], repairOptions[i]];
+    }
+
+    // CREATE THE ANSWER BUTTONS
+    repairOptions.forEach(option => {
+        const btn = document.createElement('button');
+
+        btn.className = 'quiz-btn';
+        btn.textContent = option.text;
+
+        // Run this code when the player selects an answer.
+        btn.addEventListener('click', () => {
+
+            // Display feedback explaining the selected action.
+            quizQuestion.textContent = option.feedback;
+
+            if (option.correct) {
+
+                // Reward the correct troubleshooting decision.
+                playSound('success');
+                gameState.score += 100;
+                scoreVal.textContent = gameState.score;
+
+                // Prevent additional answers after success.
+                quizChoices.innerHTML = '';
+
+                // Display the next step in the investigation.
+                const continueBtn = document.createElement('button');
+                continueBtn.className = 'btn';
+                continueBtn.textContent = "CONTINUE REPAIR";
+
+                continueBtn.addEventListener('click', () => {
+                    quizTitle.textContent = "COOLING SYSTEM CHECK";
+                    quizQuestion.textContent =
+                        "The computer is powered off. " +
+                        "You discover that the CPU cooler fan cable " +
+                        "is disconnected from its motherboard header. " +
+                        "You can now determine how to correct the problem.";
+
+                    // The next repair interaction will go here.
+                    quizChoices.innerHTML = '';
+                });
+
+                quizChoices.appendChild(continueBtn);
+
+            } else {
+
+                // Allow the player to try another answer.
+                playSound('click');
+            }
+        });
+
+        quizChoices.appendChild(btn);
+    });
+});
+
+
+        quizChoices.appendChild(nextBtn);
+    });
+
+    quizChoices.appendChild(diagnoseBtn);
+}
         function populateGuide() {
             const list = document.getElementById('guideContentList');
             list.innerHTML = '';
@@ -961,7 +1435,30 @@
             });
         }
 
-        overlayBtn.addEventListener('click', startRound);
+                overlayBtn.addEventListener('click', () => {
+            if (campaignStage === 'level1Complete') {
+                startLevel2();
+                return;
+            }
+
+            if (campaignStage === 'level2') {
+    		startMission1();
+    		return;
+	}
+	    if (campaignStage === 'level2Mission1') {
+    		beginInvestigation();
+    		return;
+	}
+
+            if (gameState.isPaused) {
+                gameState.isPaused = false;
+                document.getElementById('pauseBtn').textContent = '⏸';
+                mainOverlay.classList.remove('active');
+                return;
+            }
+
+            startRound();
+        });
         introGuideBtn.addEventListener('click', () => { playSound('click'); populateGuide(); guideModal.classList.add('active'); });
         
         document.getElementById('soundToggleBtn').addEventListener('click', () => {
