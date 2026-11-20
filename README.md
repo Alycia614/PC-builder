@@ -68,16 +68,16 @@ Testing should include:
 
 ###Development Status
 
-Interactive prototype currently in development. Additional testing, content review, and improvements are ongoing.
+    Interactive prototype currently in development. Additional testing, content review, and improvements are ongoing.
 
 ###Future Improvements
 
-Potential enhancements include additional scenarios, expanded learning content, accessibility improvements, and new assessments.
+    Potential enhancements include additional scenarios, expanded learning content, accessibility improvements, and new assessments.
 
 ###Contributors
 
-Developed by the Legion of Defense capstone team.
+    Developed by the Legion of Defense capstone team.
 
 ###Project Information
 
-Academic capstone project focused on interactive learning and foundational technical training.
+    Academic capstone project focused on interactive learning and foundational technical training.
